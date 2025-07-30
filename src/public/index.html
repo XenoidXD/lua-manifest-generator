@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steam Manifest & Lua Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 1rem; }
+    input, button { width: 100%; padding: .5rem; margin: .5rem 0; }
+    #status { margin-top: .5rem; }
+    #status p { margin: .25rem 0; color: #333; }
+    #status p.error { color: red; }
+    #downloadBtn:disabled { opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <h1>SteamTools Generator</h1>
+  <form id="form">
+    <input type="text" name="appid" placeholder="Contoh: 570" required />
+    <button type="submit" id="downloadBtn">Download ZIP</button>
+  </form>
+  <div id="status"></div>
+  <script>
+    const form = document.getElementById('form');
+    const statusEl = document.getElementById('status');
+    const btn = document.getElementById('downloadBtn');
+
+    function addStatus(message, isError = false) {
+      const p = document.createElement('p');
+      p.textContent = message;
+      if (isError) p.classList.add('error');
+      statusEl.appendChild(p);
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      statusEl.innerHTML = '';
+      btn.disabled = true;
+
+      const appid = form.appid.value.trim();
+      try {
+        addStatus('Initializing...');
+        addStatus('Connecting to SteamCMD...');
+        const request = fetch('/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ appid })
+        });
+
+        addStatus('Fetching manifest...');
+        const resp = await request;
+        if (!resp.ok) {
+          const msg = await resp.text();
+          addStatus(`Error: ${msg}`, true);
+          btn.disabled = false;
+          return;
+        }
+
+        addStatus('Packaging files...');
+                const blob = await resp.blob();
+
+        // Determine filename from Content-Disposition header
+        const disposition = resp.headers.get('Content-Disposition');
+        let filename = `${appid}.zip`;
+        if (disposition && disposition.includes('filename=')) {
+          const match = disposition.match(/filename="?([^";]+)"?/);
+          if (match && match[1]) {
+            filename = match[1];
+          }
+        }
+
+        addStatus(`Downloading as ${filename}...`);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        addStatus('Download complete!');
+
+        addStatus('Download complete!');
+      } catch (err) {
+        addStatus(`Error: ${err.message}`, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

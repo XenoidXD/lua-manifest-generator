@@ -1,0 +1,15 @@
+{
+  "name": "steam-manifest-lua-generator",
+  "version": "1.0.0",
+  "description": "Local generator for Steam .manifest files and Lua scripts compatible with SteamTools",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "archiver": "^5.3.1",
+    "axios": "^1.4.0"
+  }
+}
