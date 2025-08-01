@@ -5,21 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steam Manifest & Lua Generator</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 1rem; }
-    input, button { width: 100%; padding: .5rem; margin: .5rem 0; }
-    #status { margin-top: .5rem; }
-    #status p { margin: .25rem 0; color: #333; }
-    #status p.error { color: red; }
-    #downloadBtn:disabled { opacity: 0.6; }
+    /* Dark mode palette */
+    body {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 2rem;
+    }
+    .container {
+      background: rgba(20, 20, 35, 0.9);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+      width: 100%;
+      max-width: 400px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 1rem;
+      width: 80px;
+      opacity: 0.8;
+    }
+    input, button {
+      width: 100%;
+      padding: .75rem;
+      margin: .5rem 0;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    input {
+      background: #2e2e4f;
+      color: #e0e0e0;
+    }
+    button {
+      background: #4e4e8e;
+      color: #fff;
+      cursor: pointer;
+      transition: background .3s;
+    }
+    button:hover:not(:disabled) {
+      background: #6e6eb8;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    #status p {
+      margin: .25rem 0;
+    }
+    #status p.error {
+      color: #ff6b6b;
+    }
+    .watermark {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      opacity: 0.5;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1>SteamTools Generator</h1>
-  <form id="form">
-    <input type="text" name="appid" placeholder="Contoh: 570" required />
-    <button type="submit" id="downloadBtn">Download ZIP</button>
-  </form>
-  <div id="status"></div>
+  <div class="container">
+    <!-- Steam logo SVG -->
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg" alt="Steam Logo" class="logo">
+    <h1>SteamTools Generator</h1>
+    <form id="form">
+      <input type="text" name="appid" placeholder="Contoh: 570" required />
+      <button type="submit" id="downloadBtn">Download ZIP</button>
+    </form>
+    <div id="status"></div>
+  </div>
+  <div class="watermark">Xenoid is Here</div>
+
   <script>
     const form = document.getElementById('form');
     const statusEl = document.getElementById('status');
@@ -30,6 +104,7 @@
       p.textContent = message;
       if (isError) p.classList.add('error');
       statusEl.appendChild(p);
+      statusEl.scrollTop = statusEl.scrollHeight;
     }
 
     form.addEventListener('submit', async e => {
@@ -57,19 +132,15 @@
         }
 
         addStatus('Packaging files...');
-                const blob = await resp.blob();
+        const blob = await resp.blob();
 
-        // Determine filename from Content-Disposition header
+        addStatus('Downloading...');
         const disposition = resp.headers.get('Content-Disposition');
-        let filename = `${appid}.zip`;
+        let filename = `${appid}_steamdata.zip`;
         if (disposition && disposition.includes('filename=')) {
           const match = disposition.match(/filename="?([^";]+)"?/);
-          if (match && match[1]) {
-            filename = match[1];
-          }
+          if (match && match[1]) filename = match[1];
         }
-
-        addStatus(`Downloading as ${filename}...`);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
